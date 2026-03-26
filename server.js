@@ -11,6 +11,10 @@ const io         = new Server(httpServer, { cors: { origin: '*' } });
 
 app.use(express.static(path.join(__dirname)));
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // ── Virtual canvas (server-side physics resolution: 16:9) ───────────────────
 const VW = 1920, VH = 1080;
 const VCX = VW / 2, VCY = VH / 2;
