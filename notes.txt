@@ -1,0 +1,13 @@
+before you execute, confirm you understand the instructions and list the plan of actions
+
+we are going to create a browser game using js and canvas
+
+this will be a typing game
+in the center of the screen is a base which will have hp
+words will come from all direction to the center
+typing the words will destroy the words
+when the words hit the base it will reduce hp
+
+1 word will be targeted at a time 
+add score and wave and difficulty system 
+dark/neon visual style

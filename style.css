@@ -1,0 +1,189 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #050510;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  color: #00ffcc;
+}
+
+#gameCanvas { display: block; }
+
+/* ── Overlay ─────────────────────────────────────────── */
+#overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.screen {
+  pointer-events: all;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.screen.hidden { display: none; }
+
+/* ── Menu buttons ────────────────────────────────────── */
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 140px;   /* push below canvas title text */
+}
+
+/* ── Panel (lobby / waiting) ─────────────────────────── */
+.panel {
+  background: rgba(5, 5, 20, 0.88);
+  border: 1px solid #00ffcc44;
+  box-shadow: 0 0 40px #00ffcc22;
+  border-radius: 4px;
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  min-width: 340px;
+}
+
+.panel-title {
+  font-size: 22px;
+  letter-spacing: 6px;
+  color: #00ffcc;
+  text-shadow: 0 0 16px #00ffcc;
+  margin-bottom: 4px;
+}
+
+/* ── Buttons ──────────────────────────────────────────── */
+.btn-neon {
+  background: transparent;
+  border: 2px solid #00ffcc;
+  color: #00ffcc;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  padding: 12px 32px;
+  cursor: pointer;
+  text-shadow: 0 0 10px #00ffcc;
+  box-shadow: 0 0 16px #00ffcc33;
+  transition: background 0.15s, box-shadow 0.15s;
+  min-width: 220px;
+}
+.btn-neon:hover {
+  background: #00ffcc22;
+  box-shadow: 0 0 28px #00ffcc66;
+}
+.btn-neon.btn-secondary {
+  border-color: #aa44ff;
+  color: #aa44ff;
+  text-shadow: 0 0 10px #aa44ff;
+  box-shadow: 0 0 16px #aa44ff33;
+}
+.btn-neon.btn-secondary:hover {
+  background: #aa44ff22;
+  box-shadow: 0 0 28px #aa44ff66;
+}
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: #ffffff55;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  padding: 6px 12px;
+  transition: color 0.15s;
+}
+.btn-ghost:hover { color: #ffffff99; }
+
+/* ── Lobby inputs ─────────────────────────────────────── */
+.divider {
+  color: #ffffff33;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.code-input {
+  background: rgba(0,255,204,0.06);
+  border: 1px solid #00ffcc55;
+  color: #00ffcc;
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  letter-spacing: 6px;
+  padding: 10px 14px;
+  width: 160px;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+  caret-color: #00ffcc;
+}
+.code-input:focus { border-color: #00ffcc; box-shadow: 0 0 12px #00ffcc44; }
+.code-input::placeholder { color: #00ffcc44; letter-spacing: 3px; }
+
+/* ── Waiting screen ───────────────────────────────────── */
+.room-code-display {
+  font-size: 48px;
+  letter-spacing: 14px;
+  color: #ffff00;
+  text-shadow: 0 0 20px #ffff0088;
+  font-weight: bold;
+}
+
+.waiting-msg {
+  font-size: 15px;
+  color: #00ffcc99;
+  letter-spacing: 2px;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: #ffffff33;
+  letter-spacing: 1px;
+}
+
+/* ── Error ────────────────────────────────────────────── */
+.error-text {
+  color: #ff4466;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px #ff4466;
+  min-height: 18px;
+}
+
+.big-error {
+  font-size: 20px;
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+}
+
+/* ── Input display ────────────────────────────────────── */
+#input-display {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #00ffcc;
+  font-family: 'Courier New', monospace;
+  font-size: 22px;
+  letter-spacing: 4px;
+  text-shadow: 0 0 12px #00ffcc, 0 0 24px #00ffcc44;
+  min-width: 220px;
+  text-align: center;
+  border-bottom: 2px solid #00ffcc55;
+  padding-bottom: 6px;
+  pointer-events: none;
+}
