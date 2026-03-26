@@ -371,7 +371,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () =>
   console.log(`Typing Defense server → http://localhost:${PORT}`)
 );
