@@ -15,41 +15,7 @@
     <!-- Main menu buttons -->
     <div id="screen-menu" class="screen">
       <div class="menu-buttons">
-        <button id="btn-singleplayer" class="btn-neon">SINGLE PLAYER</button>
-        <button id="btn-multiplayer"  class="btn-neon btn-secondary">MULTIPLAYER</button>
-      </div>
-    </div>
-
-    <!-- Multiplayer lobby -->
-    <div id="screen-lobby" class="screen hidden">
-      <div class="panel">
-        <h2 class="panel-title">MULTIPLAYER</h2>
-        <button id="btn-create-room" class="btn-neon">CREATE ROOM</button>
-        <div class="divider">— OR —</div>
-        <div class="input-row">
-          <input id="room-code-input" class="code-input" placeholder="ROOM CODE" maxlength="4" autocomplete="off" spellcheck="false">
-          <button id="btn-join-room" class="btn-neon">JOIN</button>
-        </div>
-        <div id="lobby-error" class="error-text"></div>
-        <button id="btn-lobby-back" class="btn-ghost">← BACK</button>
-      </div>
-    </div>
-
-    <!-- Waiting for partner -->
-    <div id="screen-waiting" class="screen hidden">
-      <div class="panel">
-        <h2 class="panel-title">ROOM</h2>
-        <div id="waiting-code" class="room-code-display">----</div>
-        <div id="waiting-msg" class="waiting-msg">Waiting for partner...</div>
-        <div class="hint-text">Share the room code with your partner</div>
-      </div>
-    </div>
-
-    <!-- Partner disconnected -->
-    <div id="screen-partner-left" class="screen hidden">
-      <div class="panel">
-        <div class="error-text big-error">PARTNER DISCONNECTED</div>
-        <button id="btn-partner-left-menu" class="btn-neon">MAIN MENU</button>
+        <button id="btn-singleplayer" class="btn-neon">PLAY</button>
       </div>
     </div>
 
@@ -98,7 +64,6 @@
     <div id="debug-status" class="debug-status"></div>
   </div>
 
-  <script src="/socket.io/socket.io.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
