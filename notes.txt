@@ -1,4 +1,4 @@
-before you execute, confirm you understand the instructions and list the plan of actions
+before you execute, confirm you understand the instructions and list the plan of actions. after showing your plan of actions, don't proceed yet until I tell you to.
 
 we are going to create a browser game using js and canvas
 
@@ -11,3 +11,47 @@ when the words hit the base it will reduce hp
 1 word will be targeted at a time 
 add score and wave and difficulty system 
 dark/neon visual style
+
+move the base to the left of the screen, the words will come from the right of the screen
+
+we will now refer to the words as "enemies" the enemies will have an hp. completely typing the words of the enemies will reduce it's hp and dies when the hp is 0. This will scale with difficulty easier. e.g: easier difficulty will only need 1 word to reduce the hp to 0. higher dificulties will need two or more.
+
+create a debug screen/page where we can set the difficulty and it will not end the game if our hp is 0
+
+show hp bar on the enemies
+
+in debug mode, add option to make enemies move very slow
+
+when typing add a bullet shoot animation indicator that will hit the enemies.
+
+the enemy hp will now be reduced per correct letter typed
+
+the words are hard to read because of the text shadow or blur effect, remove the text shadow to make it easier to read.
+
+the hp will only reduce when the bullet collides with the the enemy
+
+remove the multiple life on the words on higher difficulty, it will now only have one life, instead the words will become longer on higher difficulties. these long words would spawn more frequent on higher difficulties.
+
+restore the hp bar, I only wanted to remove the double life of the previous iteration.
+
+
+add power ups, these will be picked up and take effect when it's word is typed. there will be different types of power ups. 
+
+For now we will only have a chain lightning power up. When this takes effect, it will shoot a chain lightning from the original target, branching off to nearby enemies, reducing their hp
+
+the power ups will have a timer after it is activated, when the time is up it will loss effect.
+
+add power ups in the debug
+
+instead of all words going to the center of the base, it will only travel in a straight line, to reduce the chance the words colliding with others which makes it hard to read.
+
+the base appearance will now be like a shield and it will span the full height of the screen.
+
+organize the codes better, split it into multiple files. Create it as classes
+
+remove the input field, so we will now don't have to type backspace for incorrect letters. when typing it will now prioritize the closest enemy if it matches the typed letter, it will still have a lock on mechanism indicating which enemy is the current target.
+already typed letters will be highlighted and won't be targeted again, any typed letters will only look for untyped letters yet, it will still follow correct sequence. e.g:
+sample word = "test"
+when the letters "te" are typed, it will only watch for "s" then "t".
+
+add a "slow" power up, this will slow current enemies in the screen. This will also have a timer, when it runs out, it will resume the original speed of affected enemies.

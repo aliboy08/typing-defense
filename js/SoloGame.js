@@ -1,6 +1,6 @@
 import { canvas } from './canvas.js';
-import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, getWaveConfig } from './constants.js';
-import { SoloWord, SoloPowerUp } from './entities.js';
+import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, SLOW_MULTIPLIER, getWaveConfig } from './constants.js';
+import { SoloWord, SoloPowerUp, SoloSlowPowerUp } from './entities.js';
 import { spawnParticles, updateParticles } from './particles.js';
 import { createLightningPoints, updateLightningArcs } from './lightning.js';
 
@@ -25,6 +25,8 @@ export class SoloGame {
     this.powerUpTimer       = 0;
     this.activeChainLightning = false;
     this.chainLightningTimer  = 0;
+    this.activeSlow           = false;
+    this.slowTimer            = 0;
     this.baseDamageFlash      = 0;
   }
 
@@ -47,6 +49,8 @@ export class SoloGame {
     this.powerUpTimer       = 0;
     this.activeChainLightning = false;
     this.chainLightningTimer  = 0;
+    this.activeSlow           = false;
+    this.slowTimer            = 0;
     this.baseDamageFlash      = 0;
   }
 
@@ -154,6 +158,15 @@ export class SoloGame {
     this.chainLightningTimer  = CHAIN_LIGHTNING_DURATION;
   }
 
+  activateSlow(pu, onClearInput) {
+    if (pu) {
+      this.powerUps = this.powerUps.filter(p => p !== pu);
+      spawnParticles(this.particles, pu.x, pu.y, '#44ccff');
+    }
+    this.activeSlow  = true;
+    this.slowTimer   = SLOW_DURATION;
+  }
+
   update(dt, wordList, debugSlowEnemies, debugGodMode, onClearInput, onGameOver) {
     this.spawnTimer += dt * 1000;
     const cfg = getWaveConfig(this.wave);
@@ -174,7 +187,9 @@ export class SoloGame {
       if (this.waveClearTimer <= 0) this.startWave(this.wave + 1);
     }
 
-    for (const w of this.words) w.update(dt, debugSlowEnemies);
+    // Speed multiplier: debug overrides power-up slow
+    const speedMult = debugSlowEnemies ? 0.1 : (this.activeSlow ? SLOW_MULTIPLIER : 1);
+    for (const w of this.words) w.update(dt, speedMult);
 
     // Power-up spawn + update
     this.powerUpTimer += dt;
@@ -183,10 +198,10 @@ export class SoloGame {
       const pool = wordList.filter(w => w.length >= 3 && w.length <= 5);
       if (pool.length) {
         const text = pool[Math.floor(Math.random() * pool.length)];
-        this.powerUps.push(new SoloPowerUp(text));
+        this.powerUps.push(Math.random() < 0.5 ? new SoloPowerUp(text) : new SoloSlowPowerUp(text));
       }
     }
-    for (const pu of this.powerUps) pu.update(dt, debugSlowEnemies);
+    for (const pu of this.powerUps) pu.update(dt, speedMult);
 
     // Remove missed power-ups
     const missedPu = this.powerUps.filter(pu => pu.reached);
@@ -199,6 +214,13 @@ export class SoloGame {
       if (this.chainLightningTimer <= 0) {
         this.activeChainLightning = false;
         this.chainLightningTimer  = 0;
+      }
+    }
+    if (this.activeSlow) {
+      this.slowTimer -= dt;
+      if (this.slowTimer <= 0) {
+        this.activeSlow = false;
+        this.slowTimer  = 0;
       }
     }
 

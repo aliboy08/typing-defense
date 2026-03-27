@@ -4,6 +4,8 @@ export const BASE_RADIUS_V          = 50;
 export const VW                     = 1920;
 export const VH                     = 1080;
 export const CHAIN_LIGHTNING_DURATION = 12;
+export const SLOW_DURATION            = 8;
+export const SLOW_MULTIPLIER          = 0.35;
 
 export const COLORS = {
   bg:        '#050510',
