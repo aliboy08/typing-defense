@@ -1,5 +1,5 @@
 import { canvas, ctx } from './canvas.js';
-import { COLORS, WORD_COLORS, SHIELD_X, BASE_RADIUS_V, CHAIN_LIGHTNING_DURATION, SLOW_DURATION } from './constants.js';
+import { COLORS, WORD_COLORS, SHIELD_X, BASE_RADIUS_V, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, FREEZE_DURATION } from './constants.js';
 
 export function drawGrid() {
 	const spacing = 44;
@@ -144,7 +144,7 @@ export function drawShield(hp, maxHp, baseDamageFlash) {
 	ctx.fillText(hp, w / 2, canvas.height / 2);
 }
 
-export function drawActivePowerUps(activeChainLightning, chainLightningTimer, activeSlow, slowTimer) {
+export function drawActivePowerUps(activeChainLightning, chainLightningTimer, activeSlow, slowTimer, activeFreeze, freezeTimer) {
 	const barW = 160, barH = 7;
 	let row = 0;
 
@@ -169,9 +169,11 @@ export function drawActivePowerUps(activeChainLightning, chainLightningTimer, ac
 	}
 
 	if (activeChainLightning)
-		drawBar('CHAIN LIGHTNING', chainLightningTimer / CHAIN_LIGHTNING_DURATION, '#aaff00', '#1a2a1a');
+		drawBar('⚡ CHAIN LIGHTNING', chainLightningTimer / CHAIN_LIGHTNING_DURATION, '#aaff00', '#1a2a1a');
 	if (activeSlow)
-		drawBar('SLOW', slowTimer / SLOW_DURATION, '#44ccff', '#0a1a2a');
+		drawBar('◎ SLOW', slowTimer / SLOW_DURATION, '#44ccff', '#0a1a2a');
+	if (activeFreeze)
+		drawBar('❄ FREEZE', freezeTimer / FREEZE_DURATION, '#b4f0ff', '#0a1520');
 }
 
 export function drawWaveFlash(waveNum, alpha) {

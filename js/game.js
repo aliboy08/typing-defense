@@ -3,7 +3,7 @@ import { COLORS, BASE_RADIUS, BASE_RADIUS_V } from './constants.js';
 import { WORD_LIST } from './wordlist.js';
 import { Network } from './network.js';
 import { SoloGame } from './SoloGame.js';
-import { SoloPowerUp, SoloSlowPowerUp } from './entities.js';
+import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './entities.js';
 import { MultiGame } from './MultiGame.js';
 import { drawParticles } from './particles.js';
 import { drawLightningArcs } from './lightning.js';
@@ -95,6 +95,13 @@ export class Game {
         this.currentInput = '';
         this.targetWord   = null;
         this.solo.activateSlow(pu, w => this._onWordCleared(w));
+      }
+    } else if (this.targetWord instanceof SoloFreezePowerUp) {
+      if (this.currentInput === this.targetWord.text) {
+        const pu = this.targetWord;
+        this.currentInput = '';
+        this.targetWord   = null;
+        this.solo.activateFreeze(pu, w => this._onWordCleared(w));
       }
     } else {
       this.solo.spawnBullet(this.targetWord);
@@ -257,7 +264,8 @@ export class Game {
     const waveInput = document.getElementById('debug-wave-input');
     const waveBtn   = document.getElementById('debug-wave-btn');
     const chainBtn  = document.getElementById('debug-chain-lightning');
-    const slowPuBtn = document.getElementById('debug-slow-powerup');
+    const slowPuBtn   = document.getElementById('debug-slow-powerup');
+    const freezePuBtn = document.getElementById('debug-freeze-powerup');
     const statusEl  = document.getElementById('debug-status');
 
     document.addEventListener('keydown', (e) => {
@@ -294,6 +302,15 @@ export class Game {
       }
       this.solo.activateSlow(null, w => this._onWordCleared(w));
       statusEl.textContent = 'slow triggered';
+    });
+
+    freezePuBtn?.addEventListener('click', () => {
+      if (this.gameMode !== 'solo' || this.state !== 'playing') {
+        statusEl.textContent = 'start solo first';
+        return;
+      }
+      this.solo.activateFreeze(null, w => this._onWordCleared(w));
+      statusEl.textContent = 'freeze triggered';
     });
 
     waveBtn.addEventListener('click', () => {
@@ -350,7 +367,7 @@ export class Game {
       for (const w  of this.solo.words)    w.draw(w  === this.targetWord, this.currentInput);
       for (const pu of this.solo.powerUps) pu.draw(pu === this.targetWord, this.currentInput);
       drawHUD(this.solo.score, this.solo.wave);
-      drawActivePowerUps(this.solo.activeChainLightning, this.solo.chainLightningTimer, this.solo.activeSlow, this.solo.slowTimer);
+      drawActivePowerUps(this.solo.activeChainLightning, this.solo.chainLightningTimer, this.solo.activeSlow, this.solo.slowTimer, this.solo.activeFreeze, this.solo.freezeTimer);
       if (this.solo.inWaveClear)
         drawWaveClearFlash(this.solo.wave, Math.min(1, this.solo.waveClearTimer * 1.5));
       else if (this.solo.waveStartFlash > 0)

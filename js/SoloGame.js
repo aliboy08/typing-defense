@@ -1,6 +1,6 @@
 import { canvas } from './canvas.js';
-import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, SLOW_MULTIPLIER, getWaveConfig } from './constants.js';
-import { SoloWord, SoloPowerUp, SoloSlowPowerUp } from './entities.js';
+import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, SLOW_MULTIPLIER, FREEZE_DURATION, getWaveConfig } from './constants.js';
+import { SoloWord, SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './entities.js';
 import { spawnParticles, updateParticles } from './particles.js';
 import { createLightningPoints, updateLightningArcs } from './lightning.js';
 
@@ -27,6 +27,8 @@ export class SoloGame {
     this.chainLightningTimer  = 0;
     this.activeSlow           = false;
     this.slowTimer            = 0;
+    this.activeFreeze         = false;
+    this.freezeTimer          = 0;
     this.baseDamageFlash      = 0;
   }
 
@@ -51,6 +53,8 @@ export class SoloGame {
     this.chainLightningTimer  = 0;
     this.activeSlow           = false;
     this.slowTimer            = 0;
+    this.activeFreeze         = false;
+    this.freezeTimer          = 0;
     this.baseDamageFlash      = 0;
   }
 
@@ -163,8 +167,19 @@ export class SoloGame {
       this.powerUps = this.powerUps.filter(p => p !== pu);
       spawnParticles(this.particles, pu.x, pu.y, '#44ccff');
     }
-    this.activeSlow  = true;
-    this.slowTimer   = SLOW_DURATION;
+    this.activeSlow = true;
+    this.slowTimer  = SLOW_DURATION;
+  }
+
+  activateFreeze(pu, onClearInput) {
+    if (pu) {
+      this.powerUps = this.powerUps.filter(p => p !== pu);
+      spawnParticles(this.particles, pu.x, pu.y, '#b4f0ff');
+    }
+    // Only freeze words currently on screen
+    for (const w of this.words) w.frozen = true;
+    this.activeFreeze = true;
+    this.freezeTimer  = FREEZE_DURATION;
   }
 
   update(dt, wordList, debugSlowEnemies, debugGodMode, onClearInput, onGameOver) {
@@ -198,7 +213,12 @@ export class SoloGame {
       const pool = wordList.filter(w => w.length >= 3 && w.length <= 5);
       if (pool.length) {
         const text = pool[Math.floor(Math.random() * pool.length)];
-        this.powerUps.push(Math.random() < 0.5 ? new SoloPowerUp(text) : new SoloSlowPowerUp(text));
+        const r = Math.random();
+        this.powerUps.push(
+          r < 0.33 ? new SoloPowerUp(text) :
+          r < 0.66 ? new SoloSlowPowerUp(text) :
+                     new SoloFreezePowerUp(text)
+        );
       }
     }
     for (const pu of this.powerUps) pu.update(dt, speedMult);
@@ -221,6 +241,14 @@ export class SoloGame {
       if (this.slowTimer <= 0) {
         this.activeSlow = false;
         this.slowTimer  = 0;
+      }
+    }
+    if (this.activeFreeze) {
+      this.freezeTimer -= dt;
+      if (this.freezeTimer <= 0) {
+        for (const w of this.words) w.frozen = false;
+        this.activeFreeze = false;
+        this.freezeTimer  = 0;
       }
     }
 
