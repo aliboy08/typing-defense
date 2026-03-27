@@ -1,5 +1,5 @@
 import { canvas } from './canvas.js';
-import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, SLOW_MULTIPLIER, FREEZE_DURATION, getWaveConfig } from './constants.js';
+import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, SLOW_MULTIPLIER, FREEZE_DURATION, getWaveConfig, xpForLevel } from './constants.js';
 import { SoloWord, SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './entities.js';
 import { spawnParticles, updateParticles } from './particles.js';
 import { createLightningPoints, updateLightningArcs } from './lightning.js';
@@ -30,6 +30,32 @@ export class SoloGame {
     this.activeFreeze         = false;
     this.freezeTimer          = 0;
     this.baseDamageFlash      = 0;
+
+    // ── XP & leveling ────────────────────────────────────────────────────────
+    this.xp             = 0;
+    this.level          = 1;
+    this.xpToNext       = xpForLevel(1);
+    this.pendingLevelUp = false;
+    this.skills         = {};  // { skillId: tier }
+
+    // ── Skill-derived properties (set by skill apply()) ──────────────────────
+    this.maxHp               = 100;
+    this.bulletCount         = 1;
+    this.critChance          = 0;
+    this.piercePower         = 0;
+    this.xpMult              = 1.0;
+    this.scholarThreshold    = 0;   // 0 = disabled
+    this.focusThreshold      = 0;   // 0 = disabled
+    this.consecutiveKills    = 0;
+    this.overkillChains      = 0;
+    this.explosiveRadius     = 0;
+    this.explosiveDamage     = 0;
+    this.slowAuraReduction   = 0;
+    this.regenInterval       = 0;   // 0 = disabled
+    this.regenAmount         = 0;
+    this.regenAccum          = 0;
+    this.lastStandTier       = 0;   // 0 = no skill
+    this.lastStandAvailable  = false;
   }
 
   reset() {
@@ -56,6 +82,32 @@ export class SoloGame {
     this.activeFreeze         = false;
     this.freezeTimer          = 0;
     this.baseDamageFlash      = 0;
+
+    // XP & leveling
+    this.xp             = 0;
+    this.level          = 1;
+    this.xpToNext       = xpForLevel(1);
+    this.pendingLevelUp = false;
+    this.skills         = {};
+
+    // Skill properties
+    this.maxHp               = 100;
+    this.bulletCount         = 1;
+    this.critChance          = 0;
+    this.piercePower         = 0;
+    this.xpMult              = 1.0;
+    this.scholarThreshold    = 0;
+    this.focusThreshold      = 0;
+    this.consecutiveKills    = 0;
+    this.overkillChains      = 0;
+    this.explosiveRadius     = 0;
+    this.explosiveDamage     = 0;
+    this.slowAuraReduction   = 0;
+    this.regenInterval       = 0;
+    this.regenAmount         = 0;
+    this.regenAccum          = 0;
+    this.lastStandTier       = 0;
+    this.lastStandAvailable  = false;
   }
 
   startWave(n) {
@@ -67,7 +119,44 @@ export class SoloGame {
     this.waveClearTimer = 0;
     this.spawnTimer     = 0;
     this.waveStartFlash = 2.0;
+    // Recharge last stand each wave
+    if (this.lastStandTier > 0) this.lastStandAvailable = true;
   }
+
+  // ── XP helpers ─────────────────────────────────────────────────────────────
+
+  _awardXp(word) {
+    let xpGain = word.text.length * this.wave;
+    if (this.scholarThreshold > 0 && word.text.length >= this.scholarThreshold) {
+      xpGain *= 2;
+    }
+    xpGain = Math.floor(xpGain * this.xpMult);
+    this.xp += xpGain;
+    if (this.xp >= this.xpToNext && !this.pendingLevelUp) {
+      this.pendingLevelUp = true;
+    }
+  }
+
+  // Called by game.js after the player picks a skill.
+  advanceLevel() {
+    this.xp       = Math.max(0, this.xp - this.xpToNext);
+    this.level++;
+    this.xpToNext = xpForLevel(this.level);
+  }
+
+  // ── Nearest word helper ────────────────────────────────────────────────────
+
+  _nearestWord(x, y, exclude) {
+    let nearest = null, nearestDist = Infinity;
+    for (const w of this.words) {
+      if (w === exclude) continue;
+      const d = Math.hypot(w.x - x, w.y - y);
+      if (d < nearestDist) { nearestDist = d; nearest = w; }
+    }
+    return nearest;
+  }
+
+  // ── Word pool / spawning ───────────────────────────────────────────────────
 
   getWordPool(wordList) {
     const { wordLenMin: min, wordLenMax: max } = getWaveConfig(this.wave);
@@ -85,20 +174,63 @@ export class SoloGame {
     this.waveSpawned++;
   }
 
-  destroyWord(word, onClearInput) {
+  // ── Combat ─────────────────────────────────────────────────────────────────
+
+  destroyWord(word, onClearInput, excess = 0) {
     const col = COLORS.particle[Math.floor(Math.random() * COLORS.particle.length)];
     spawnParticles(this.particles, word.x, word.y, col);
     this.words = this.words.filter(w => w !== word);
     this.score += word.text.length * this.wave * 10;
     this.waveDestroyed++;
-    onClearInput();
+    this._awardXp(word);
+
+    // Focus: consecutive kill streak fires a free bonus bullet
+    this.consecutiveKills++;
+    if (this.focusThreshold > 0 && this.consecutiveKills % this.focusThreshold === 0) {
+      const closest = this._nearestWord(SHIELD_X, canvas.height / 2, null);
+      if (closest) {
+        this.projectiles.push({ x: SHIELD_X, y: canvas.height / 2, target: closest, speed: 700, pierceLeft: this.piercePower });
+      }
+    }
+
+    // Overkill: spread excess damage to nearby enemies (no recursion)
+    if (this.overkillChains > 0 && excess > 0) {
+      const targets = [...this.words]
+        .sort((a, b) => Math.hypot(a.x - word.x, a.y - word.y) - Math.hypot(b.x - word.x, b.y - word.y))
+        .slice(0, this.overkillChains);
+      for (const t of targets) {
+        t.hp = Math.max(0, t.hp - excess);
+        t.hitFlash = 0.5;
+        if (t.hp <= 0) {
+          spawnParticles(this.particles, t.x, t.y, COLORS.particle[Math.floor(Math.random() * COLORS.particle.length)]);
+          this.words     = this.words.filter(w => w !== t);
+          this.score    += t.text.length * this.wave * 10;
+          this.waveDestroyed++;
+          this._awardXp(t);
+          onClearInput(t);
+        }
+      }
+    }
+
+    onClearInput(word);
   }
 
-  damageEnemy(word, dmg, onClearInput, fromChain = false) {
-    word.hp = Math.max(0, word.hp - dmg);
-    word.hitFlash = 0.5;
-    if (word.hp <= 0) this.destroyWord(word, onClearInput);
+  damageEnemy(word, dmg, onClearInput, fromChain = false, fromOverkill = false) {
+    // Critical strike: only on primary bullet hits, not chain or overkill
+    if (!fromChain && !fromOverkill && this.critChance > 0 && Math.random() < this.critChance) {
+      dmg = word.hp; // instant kill
+    }
 
+    const hpBefore = word.hp;
+    word.hp        = Math.max(0, word.hp - dmg);
+    word.hitFlash  = 0.5;
+
+    if (word.hp <= 0) {
+      const excess = fromOverkill ? 0 : Math.max(0, dmg - hpBefore);
+      this.destroyWord(word, onClearInput, excess);
+    }
+
+    // Chain lightning: only procs if the word survived the hit
     if (this.activeChainLightning && !fromChain && this.words.includes(word)) {
       const nearby = this.words
         .filter(w => w !== word)
@@ -112,25 +244,63 @@ export class SoloGame {
   }
 
   spawnBullet(target) {
-    this.projectiles.push({ x: SHIELD_X, y: target.y, target, speed: 700 });
+    const count = this.bulletCount;
+    for (let i = 0; i < count; i++) {
+      const offsetY = (i - (count - 1) / 2) * 10;
+      this.projectiles.push({
+        x: SHIELD_X,
+        y: target.y + offsetY,
+        target,
+        speed: 700,
+        pierceLeft: this.piercePower,
+      });
+    }
   }
 
   updateProjectiles(dt, onClearInput) {
     this.projectiles = this.projectiles.filter(p => {
-      if (!this.words.includes(p.target)) return false;
+      // If target was destroyed, try to pierce to a new one
+      if (!this.words.includes(p.target)) {
+        if (p.pierceLeft > 0 && this.words.length > 0) {
+          const next = this._nearestWord(p.x, p.y, null);
+          if (next) { p.target = next; p.pierceLeft--; return true; }
+        }
+        return false;
+      }
+
       const dx   = p.target.x - p.x;
       const dy   = p.target.y - p.y;
       const dist = Math.hypot(dx, dy);
+
       if (dist < 6) {
         this.damageEnemy(p.target, 1, onClearInput);
+
+        // Explosive round: splash nearby enemies
+        if (this.explosiveDamage > 0) {
+          const hitX = p.target.x, hitY = p.target.y;
+          for (const w of [...this.words]) {
+            if (w !== p.target && Math.hypot(w.x - hitX, w.y - hitY) <= this.explosiveRadius) {
+              this.damageEnemy(w, this.explosiveDamage, onClearInput, false, true);
+            }
+          }
+        }
+
+        // Pierce: redirect bullet to next nearest enemy
+        if (p.pierceLeft > 0 && this.words.length > 0) {
+          const next = this._nearestWord(p.x, p.y, p.target);
+          if (next) { p.target = next; p.pierceLeft--; return true; }
+        }
         return false;
       }
+
       const move = Math.min(p.speed * dt, dist);
       p.x += (dx / dist) * move;
       p.y += (dy / dist) * move;
       return true;
     });
   }
+
+  // ── Power-ups ──────────────────────────────────────────────────────────────
 
   activateChainLightning(pu, onClearInput) {
     if (pu) {
@@ -176,11 +346,12 @@ export class SoloGame {
       this.powerUps = this.powerUps.filter(p => p !== pu);
       spawnParticles(this.particles, pu.x, pu.y, '#b4f0ff');
     }
-    // Only freeze words currently on screen
     for (const w of this.words) w.frozen = true;
     this.activeFreeze = true;
     this.freezeTimer  = FREEZE_DURATION;
   }
+
+  // ── Main update ────────────────────────────────────────────────────────────
 
   update(dt, wordList, debugSlowEnemies, debugGodMode, onClearInput, onGameOver) {
     this.spawnTimer += dt * 1000;
@@ -202,9 +373,19 @@ export class SoloGame {
       if (this.waveClearTimer <= 0) this.startWave(this.wave + 1);
     }
 
-    // Speed multiplier: debug overrides power-up slow
-    const speedMult = debugSlowEnemies ? 0.1 : (this.activeSlow ? SLOW_MULTIPLIER : 1);
+    // Speed multiplier: slow aura stacks multiplicatively with power-up slow
+    const baseMult  = debugSlowEnemies ? 0.1 : (this.activeSlow ? SLOW_MULTIPLIER : 1);
+    const speedMult = baseMult * (1 - this.slowAuraReduction);
     for (const w of this.words) w.update(dt, speedMult);
+
+    // Shield regen
+    if (this.regenInterval > 0) {
+      this.regenAccum += dt;
+      if (this.regenAccum >= this.regenInterval) {
+        this.regenAccum -= this.regenInterval;
+        this.hp = Math.min(this.maxHp, this.hp + this.regenAmount);
+      }
+    }
 
     // Power-up spawn + update
     this.powerUpTimer += dt;
@@ -224,10 +405,7 @@ export class SoloGame {
     for (const pu of this.powerUps) pu.update(dt, speedMult);
 
     // Remove missed power-ups
-    const missedPu = this.powerUps.filter(pu => pu.reached);
-    for (const pu of missedPu) {
-      this.powerUps = this.powerUps.filter(p => p !== pu);
-    }
+    this.powerUps = this.powerUps.filter(pu => !pu.reached);
 
     if (this.activeChainLightning) {
       this.chainLightningTimer -= dt;
@@ -238,10 +416,7 @@ export class SoloGame {
     }
     if (this.activeSlow) {
       this.slowTimer -= dt;
-      if (this.slowTimer <= 0) {
-        this.activeSlow = false;
-        this.slowTimer  = 0;
-      }
+      if (this.slowTimer <= 0) { this.activeSlow = false; this.slowTimer = 0; }
     }
     if (this.activeFreeze) {
       this.freezeTimer -= dt;
@@ -260,11 +435,21 @@ export class SoloGame {
     // Words reaching the base
     const hit = this.words.filter(w => w.reached);
     for (const w of hit) {
+      let newHp = this.hp - Math.ceil(w.text.length * 1.5);
+
+      // Last stand: intercept lethal hit
+      if (newHp <= 0 && !debugGodMode && this.lastStandTier > 0 && this.lastStandAvailable) {
+        newHp = this.lastStandTier;
+        this.lastStandAvailable = false;
+        spawnParticles(this.particles, SHIELD_X, w.y, '#ffffff');
+      }
+
       const minHp = debugGodMode ? 1 : 0;
-      this.hp = Math.max(minHp, this.hp - Math.ceil(w.text.length * 1.5));
+      this.hp = Math.max(minHp, newHp);
       this.baseDamageFlash = 1.0;
       spawnParticles(this.particles, SHIELD_X, w.y, '#ff2244');
       this.words = this.words.filter(x => x !== w);
+      this.consecutiveKills = 0; // miss resets the focus streak
       onClearInput(w);
       if (this.hp <= 0) { onGameOver(); return; }
     }

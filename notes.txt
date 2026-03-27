@@ -57,3 +57,29 @@ when the letters "te" are typed, it will only watch for "s" then "t".
 add a "slow" power up, this will slow current enemies in the screen. This will also have a timer, when it runs out, it will resume the original speed of affected enemies.
 
 when the enemy/word is the current target, make the indicator more obvious, sometimes it's hard to see what is the current active target
+
+
+add level up system, killing enem would give xp. level up when the xp bar is full. next levels would require more xp.
+leveling up would allow the player to select skills.
+This will show a screen showing 3 random skills. The game will be paused in this phase.
+On the next level up, if the already selected skill shows up again, it would be an improved version. e.g: effectiveness, stats, damage, etc
+we will add more skills in the future. make it easy to add skills, code each skill in it's own file inside the folder named "skills".
+please come up with some skills you think is applicable on this game, please list your ideas first then I will confirm what we will add.
+
+Offensive                                                                                                                                                                       
+1. Double Shot — Fires 2 bullets per completed word. Upgrade: 3 bullets.
+2. Explosive Round — Bullets deal 1 splash damage to enemies adjacent to the target on hit. Upgrade: larger radius / +1 splash damage.                                          
+3. Critical Strike — 15% chance to instantly destroy an enemy regardless of HP. Upgrade: +10% chance per tier.
+4. Overkill — Excess damage from a kill carries over to the nearest enemy. Upgrade: chains to 2 enemies.
+5. Piercing Shot — Bullet continues through the target and hits the word directly behind it for 1 damage. Upgrade: pierces 2 words.
+
+Defensive
+6. Fortify — Increase max HP by 15 and heal 10. Upgrade: +15 max HP and +10 heal each tier.
+7. Shield Regen — Regenerate 1 HP every 4 seconds. Upgrade: faster regen interval.
+8. Last Stand — When HP first drops to 0, survive with 1 HP (one time). Upgrade: recharges faster.
+
+Utility / Typing
+9. Greed — Earn 25% more XP from all kills. Upgrade: stacks additively.
+10. Scholar — Words longer than 6 letters give double XP. Upgrade: threshold drops to 5, then 4 letters.
+11. Focus — Every 5 consecutive kills without taking damage fires a free bonus bullet at the closest enemy. Upgrade: triggers every 4, then 3 kills.
+12. Slow Aura — All enemies move 10% slower permanently. Upgrade: stacks for 10% more each tier.

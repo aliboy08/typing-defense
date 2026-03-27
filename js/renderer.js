@@ -257,6 +257,126 @@ export function drawMultiWord(word, serverState, myPlayerNum) {
 	ctx.shadowBlur = 0;
 }
 
+export function drawXPBar(xp, xpToNext, level) {
+	const barW = 300, barH = 8;
+	const cx   = canvas.width / 2;
+	const y    = canvas.height - 22;
+	const x    = cx - barW / 2;
+	const pct  = Math.min(1, xp / xpToNext);
+
+	ctx.fillStyle = 'rgba(0,0,0,0.6)';
+	ctx.fillRect(x - 1, y - 1, barW + 2, barH + 2);
+
+	ctx.shadowBlur  = 10;
+	ctx.shadowColor = '#aa44ff';
+	ctx.fillStyle   = '#aa44ff';
+	ctx.fillRect(x, y, barW * pct, barH);
+	ctx.shadowBlur  = 0;
+
+	ctx.strokeStyle = '#ffffff22';
+	ctx.lineWidth   = 1;
+	ctx.strokeRect(x, y, barW, barH);
+
+	ctx.font         = '10px "Courier New",monospace';
+	ctx.textBaseline = 'bottom';
+	ctx.shadowBlur   = 6;
+	ctx.shadowColor  = '#aa44ff';
+	ctx.fillStyle    = '#aa44ff';
+	ctx.textAlign    = 'left';
+	ctx.fillText(`LVL ${level}`, x, y - 3);
+	ctx.shadowBlur   = 0;
+	ctx.fillStyle    = '#ffffff55';
+	ctx.textAlign    = 'right';
+	ctx.fillText(`${xp} / ${xpToNext} XP`, x + barW, y - 3);
+}
+
+function _wrapText(text, cx, y, maxW, lineH) {
+	const words = text.split(' ');
+	let line = '';
+	ctx.textAlign    = 'center';
+	ctx.textBaseline = 'top';
+	for (const word of words) {
+		const test = line ? line + ' ' + word : word;
+		if (ctx.measureText(test).width > maxW && line) {
+			ctx.fillText(line, cx, y);
+			line = word;
+			y   += lineH;
+		} else {
+			line = test;
+		}
+	}
+	if (line) ctx.fillText(line, cx, y);
+}
+
+export function drawLevelUpScreen(choices, playerSkills, newLevel) {
+	// Darkened overlay (game is still visible behind)
+	ctx.fillStyle = 'rgba(5,5,16,0.82)';
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	const cy = canvas.height / 2;
+
+	// Title
+	drawCentered(`LEVEL  UP!`, cy - 160, 'bold 36px "Courier New",monospace', '#aa44ff', 35);
+	drawCentered(`LEVEL ${newLevel}`, cy - 118, 'bold 18px "Courier New",monospace', '#ffffff88', 0);
+	drawCentered('CHOOSE A SKILL  [ 1 ]  [ 2 ]  [ 3 ]', cy - 86, 'bold 13px "Courier New",monospace', '#ffff0099', 8);
+
+	const cardW = 230, cardH = 145, gap = 28;
+	const totalW = choices.length * cardW + (choices.length - 1) * gap;
+	const startX = canvas.width / 2 - totalW / 2;
+
+	for (let i = 0; i < choices.length; i++) {
+		const skill       = choices[i];
+		const currentTier = playerSkills[skill.id] || 0;
+		const newTier     = currentTier + 1;
+		const isUpgrade   = currentTier > 0;
+		const cardCX      = startX + i * (cardW + gap) + cardW / 2;
+		const cardY       = cy - 60;
+
+		// Card background
+		ctx.fillStyle = 'rgba(18,8,36,0.96)';
+		ctx.fillRect(cardCX - cardW / 2, cardY, cardW, cardH);
+
+		// Card border with glow
+		ctx.shadowBlur  = 18;
+		ctx.shadowColor = '#aa44ff';
+		ctx.strokeStyle = '#aa44ff';
+		ctx.lineWidth   = 1.5;
+		ctx.strokeRect(cardCX - cardW / 2, cardY, cardW, cardH);
+		ctx.shadowBlur  = 0;
+
+		// Key hint badge
+		ctx.font         = 'bold 14px "Courier New",monospace';
+		ctx.textAlign    = 'center';
+		ctx.textBaseline = 'top';
+		ctx.shadowBlur   = 10;
+		ctx.shadowColor  = '#ffff00';
+		ctx.fillStyle    = '#ffff00';
+		ctx.fillText(`[ ${i + 1} ]`, cardCX, cardY + 8);
+		ctx.shadowBlur   = 0;
+
+		// Skill icon + name
+		ctx.font      = 'bold 13px "Courier New",monospace';
+		ctx.fillStyle = '#ffffff';
+		ctx.fillText(`${skill.icon}  ${skill.name}`, cardCX, cardY + 32);
+
+		// Tier indicator (pips)
+		const tierColor = isUpgrade ? '#ffcc00' : '#00ffcc';
+		ctx.shadowBlur  = 6;
+		ctx.shadowColor = tierColor;
+		ctx.fillStyle   = tierColor;
+		ctx.font        = '11px "Courier New",monospace';
+		let pips = '';
+		for (let t = 1; t <= skill.maxTier; t++) pips += t <= newTier ? '●' : '○';
+		ctx.fillText(isUpgrade ? `UPGRADE  ${pips}` : `NEW!  ${pips}`, cardCX, cardY + 54);
+		ctx.shadowBlur  = 0;
+
+		// Description (word-wrapped)
+		ctx.font      = '10px "Courier New",monospace';
+		ctx.fillStyle = '#cccccc';
+		_wrapText(skill.description(newTier), cardCX, cardY + 76, cardW - 24, 15);
+	}
+}
+
 export function drawPlayerLabels(serverState, myPlayerNum) {
 	if (!serverState) return;
 	const myCol = myPlayerNum === 0 ? COLORS.wordTyped : COLORS.p2Typed;

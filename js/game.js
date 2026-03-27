@@ -7,17 +7,19 @@ import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './entities.js';
 import { MultiGame } from './MultiGame.js';
 import { drawParticles } from './particles.js';
 import { drawLightningArcs } from './lightning.js';
+import { pickRandomSkills } from './skills/index.js';
 import {
   drawGrid, drawShield, drawHUD, drawMenu, drawGameOver,
   drawActivePowerUps, drawWaveFlash, drawWaveClearFlash,
   drawBaseAt, drawHpBarAt, drawCentered,
   drawMultiWord, drawPlayerLabels,
+  drawXPBar, drawLevelUpScreen,
 } from './renderer.js';
 
 export class Game {
   constructor() {
     // ── State ──────────────────────────────────────────────────────────────────
-    this.state       = 'menu'; // 'menu' | 'lobby' | 'waiting' | 'playing' | 'gameover'
+    this.state       = 'menu'; // 'menu'|'lobby'|'waiting'|'playing'|'levelup'|'gameover'
     this.gameMode    = 'solo'; // 'solo' | 'multi'
     this.myPlayerNum = 0;
 
@@ -33,6 +35,9 @@ export class Game {
     this.solo    = new SoloGame();
     this.multi   = new MultiGame();
     this.network = new Network();
+
+    // ── Level-up skill choices ─────────────────────────────────────────────────
+    this.levelUpChoices = [];
 
     this.lastTime = 0;
 
@@ -58,8 +63,38 @@ export class Game {
     if (id) document.getElementById(id)?.classList.remove('hidden');
   }
 
+  // ── Level-up flow ─────────────────────────────────────────────────────────────
+  _enterLevelUp() {
+    const choices = pickRandomSkills(this.solo.skills, 3);
+    if (choices.length === 0) {
+      // All skills maxed — just advance with no choice
+      this.solo.advanceLevel();
+      this.state = 'playing';
+      return;
+    }
+    this.levelUpChoices = choices;
+    this.currentInput   = '';
+    this.targetWord     = null;
+    this.state          = 'levelup';
+  }
+
+  _applySkill(skill) {
+    const currentTier = this.solo.skills[skill.id] || 0;
+    const newTier     = currentTier + 1;
+    this.solo.skills[skill.id] = newTier;
+    skill.apply(this.solo, newTier);
+    this.solo.advanceLevel();
+
+    // Chain into another level-up if XP carried over
+    if (this.solo.xp >= this.solo.xpToNext) {
+      this.solo.pendingLevelUp = false;
+      this._enterLevelUp();
+    } else {
+      this.state = 'playing';
+    }
+  }
+
   // ── Solo targeting ────────────────────────────────────────────────────────────
-  // Each key press is validated letter-by-letter; wrong keys are silently ignored.
   _soloHandleKey(key) {
     const allTargets = [...this.solo.words, ...this.solo.powerUps];
 
@@ -183,6 +218,16 @@ export class Game {
       }
       if (this.state === 'lobby' || this.state === 'waiting') return;
 
+      // Level-up skill selection: 1, 2, 3
+      if (this.state === 'levelup') {
+        if (e.key === '1' || e.key === '2' || e.key === '3') {
+          const idx   = parseInt(e.key) - 1;
+          const skill = this.levelUpChoices[idx];
+          if (skill) this._applySkill(skill);
+        }
+        return;
+      }
+
       if (this.state === 'gameover') {
         if (e.key === 'Enter') {
           if (this.gameMode === 'solo') this.startSolo();
@@ -202,17 +247,14 @@ export class Game {
       if (this.gameMode === 'solo') {
         this._soloHandleKey(e.key);
       } else {
-        // Multi: apply same letter-by-letter filter using server-echoed input length
         const serverInput = this.multi.serverState?.players[this.myPlayerNum]?.input ?? this.currentInput;
         const serverWords = this.multi.serverState?.words ?? [];
         const myTargetId  = this.multi.serverState?.players[this.myPlayerNum]?.targetId ?? null;
         const myTarget    = serverWords.find(w => w.id === myTargetId) ?? null;
 
         if (!myTarget) {
-          // No lock yet — accept first-char match (server will lock)
           this.currentInput += e.key;
         } else {
-          // Locked — only accept next char in the target word
           if (e.key !== myTarget.text[serverInput.length]) return;
           this.currentInput += e.key;
         }
@@ -350,18 +392,26 @@ export class Game {
 
     drawGrid();
 
-    // ── Solo ──────────────────────────────────────────────────────────────────
-    if (this.state === 'playing' && this.gameMode === 'solo') {
-      this.solo.update(
-        dt,
-        WORD_LIST,
-        this.debugSlowEnemies,
-        this.debugGodMode,
-        w => this._onWordCleared(w),
-        () => { this.state = 'gameover'; },
-      );
+    // ── Solo (playing + levelup share the same render base) ────────────────────
+    if ((this.state === 'playing' || this.state === 'levelup') && this.gameMode === 'solo') {
+      if (this.state === 'playing') {
+        this.solo.update(
+          dt,
+          WORD_LIST,
+          this.debugSlowEnemies,
+          this.debugGodMode,
+          w => this._onWordCleared(w),
+          () => { this.state = 'gameover'; },
+        );
 
-      drawShield(this.solo.hp, 100, this.solo.baseDamageFlash);
+        // Trigger level-up screen if XP threshold crossed
+        if (this.solo.pendingLevelUp) {
+          this.solo.pendingLevelUp = false;
+          this._enterLevelUp();
+        }
+      }
+
+      drawShield(this.solo.hp, this.solo.maxHp, this.solo.baseDamageFlash);
       drawParticles(this.solo.particles);
       drawLightningArcs(this.solo.lightningArcs);
       this._drawSoloProjectiles();
@@ -369,10 +419,16 @@ export class Game {
       for (const pu of this.solo.powerUps) pu.draw(pu === this.targetWord, this.currentInput);
       drawHUD(this.solo.score, this.solo.wave);
       drawActivePowerUps(this.solo.activeChainLightning, this.solo.chainLightningTimer, this.solo.activeSlow, this.solo.slowTimer, this.solo.activeFreeze, this.solo.freezeTimer);
-      if (this.solo.inWaveClear)
-        drawWaveClearFlash(this.solo.wave, Math.min(1, this.solo.waveClearTimer * 1.5));
-      else if (this.solo.waveStartFlash > 0)
-        drawWaveFlash(this.solo.wave, Math.min(1, this.solo.waveStartFlash * 1.5));
+      drawXPBar(this.solo.xp, this.solo.xpToNext, this.solo.level);
+
+      if (this.state === 'levelup') {
+        drawLevelUpScreen(this.levelUpChoices, this.solo.skills, this.solo.level + 1);
+      } else {
+        if (this.solo.inWaveClear)
+          drawWaveClearFlash(this.solo.wave, Math.min(1, this.solo.waveClearTimer * 1.5));
+        else if (this.solo.waveStartFlash > 0)
+          drawWaveFlash(this.solo.wave, Math.min(1, this.solo.waveStartFlash * 1.5));
+      }
     }
 
     // ── Multi ──────────────────────────────────────────────────────────────────

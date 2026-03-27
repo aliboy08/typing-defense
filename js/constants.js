@@ -24,6 +24,11 @@ export const COLORS = {
 
 export const WORD_COLORS = ['#ff44aa','#ff8800','#cc44ff','#ff6644','#ffcc00'];
 
+// XP required to reach the next level. Scales ~40% per level.
+export function xpForLevel(level) {
+  return Math.floor(100 * Math.pow(1.4, level - 1));
+}
+
 export function getWaveConfig(w) {
   return {
     wordSpeed:     40 + w * 9,
