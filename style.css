@@ -170,20 +170,114 @@ body {
   margin-bottom: 8px;
 }
 
-/* ── Input display ────────────────────────────────────── */
-#input-display {
+/* ── Debug panel ──────────────────────────────────────── */
+#debug-panel {
   position: fixed;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #00ffcc;
+  top: 14px;
+  right: 14px;
+  background: rgba(5, 5, 20, 0.92);
+  border: 1px solid #aa44ff88;
+  box-shadow: 0 0 24px #aa44ff33;
+  border-radius: 4px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 210px;
+  z-index: 999;
   font-family: 'Courier New', monospace;
-  font-size: 22px;
-  letter-spacing: 4px;
-  text-shadow: 0 0 12px #00ffcc, 0 0 24px #00ffcc44;
-  min-width: 220px;
-  text-align: center;
-  border-bottom: 2px solid #00ffcc55;
-  padding-bottom: 6px;
-  pointer-events: none;
+  font-size: 13px;
+  color: #cc88ff;
 }
+#debug-panel.hidden { display: none; }
+
+.debug-title {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #aa44ff;
+  text-shadow: 0 0 10px #aa44ff;
+  text-align: center;
+  border-bottom: 1px solid #aa44ff44;
+  padding-bottom: 8px;
+}
+
+.debug-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.debug-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.debug-toggle {
+  background: transparent;
+  border: 1px solid #ff4466;
+  color: #ff4466;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  cursor: pointer;
+  min-width: 44px;
+  transition: background 0.1s;
+}
+.debug-toggle[data-on="true"] {
+  border-color: #00ffcc;
+  color: #00ffcc;
+  background: #00ffcc18;
+  text-shadow: 0 0 8px #00ffcc;
+}
+.debug-toggle:hover { opacity: 0.8; }
+
+.debug-input {
+  background: rgba(170,68,255,0.08);
+  border: 1px solid #aa44ff55;
+  color: #cc88ff;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  padding: 4px 6px;
+  width: 52px;
+  text-align: center;
+  outline: none;
+}
+.debug-input:focus { border-color: #aa44ff; }
+
+.debug-btn {
+  background: transparent;
+  border: 1px solid #aa44ff;
+  color: #aa44ff;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.debug-btn:hover { background: #aa44ff22; }
+
+.debug-divider {
+  border-top: 1px solid #aa44ff33;
+  margin: 2px 0;
+}
+
+.debug-section-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #aa44ff88;
+  justify-content: flex-start;
+}
+
+.debug-status {
+  font-size: 11px;
+  color: #ffffff44;
+  letter-spacing: 1px;
+  min-height: 14px;
+  text-align: center;
+}
+
+/* ── Input display (hidden — typing is shown on word highlights instead) ── */
+#input-display { display: none; }

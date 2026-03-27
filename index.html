@@ -58,9 +58,39 @@
   <!-- Input display (always visible during play) -->
   <div id="input-display"></div>
 
+  <!-- Debug panel (toggle with backtick) -->
+  <div id="debug-panel" class="hidden">
+    <div class="debug-title">⚙ DEBUG</div>
+
+    <label class="debug-row">
+      <span>God Mode</span>
+      <button id="debug-godmode" class="debug-toggle" data-on="false">OFF</button>
+    </label>
+
+    <label class="debug-row">
+      <span>Slow Enemies</span>
+      <button id="debug-slow" class="debug-toggle" data-on="false">OFF</button>
+    </label>
+
+    <div class="debug-row">
+      <span>Set Wave</span>
+      <div class="debug-input-row">
+        <input id="debug-wave-input" class="debug-input" type="number" min="1" max="99" value="1">
+        <button id="debug-wave-btn" class="debug-btn">SET</button>
+      </div>
+    </div>
+
+    <div class="debug-divider"></div>
+    <div class="debug-row debug-section-label">Power-ups</div>
+    <div class="debug-row">
+      <span>Chain Lightning</span>
+      <button id="debug-chain-lightning" class="debug-btn">TRIGGER</button>
+    </div>
+
+    <div id="debug-status" class="debug-status"></div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
-  <script src="js/wordlist.js"></script>
-  <script src="js/network.js"></script>
-  <script src="js/game.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

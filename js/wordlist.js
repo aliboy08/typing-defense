@@ -1,4 +1,4 @@
-const WORD_LIST = [
+export const WORD_LIST = [
   // 3 letters
   'ace', 'arc', 'ash', 'axe', 'bit', 'bug', 'cat', 'cry', 'cut', 'dim',
   'dot', 'duo', 'dye', 'ego', 'elk', 'end', 'era', 'eve', 'eye', 'fan',
