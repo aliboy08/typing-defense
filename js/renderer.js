@@ -257,6 +257,29 @@ export function drawMultiWord(word, serverState, myPlayerNum) {
 	ctx.shadowBlur = 0;
 }
 
+// activeSkills: [{ name, icon, tier, maxTier }, ...]
+export function drawActiveSkills(activeSkills) {
+	if (!activeSkills.length) return;
+	const lineH  = 17;
+	const rightX = canvas.width - 18;
+	const baseY  = canvas.height - 42; // sit above the XP bar
+
+	ctx.font         = '10px "Courier New",monospace';
+	ctx.textAlign    = 'right';
+	ctx.textBaseline = 'bottom';
+
+	for (let i = 0; i < activeSkills.length; i++) {
+		const { name, icon, tier, maxTier } = activeSkills[activeSkills.length - 1 - i];
+		let pips = '';
+		for (let t = 1; t <= maxTier; t++) pips += t <= tier ? '●' : '○';
+		ctx.shadowBlur  = 5;
+		ctx.shadowColor = '#aa44ff';
+		ctx.fillStyle   = '#cc88ff99';
+		ctx.fillText(`${icon} ${name}  ${pips}`, rightX, baseY - i * lineH);
+		ctx.shadowBlur  = 0;
+	}
+}
+
 export function drawXPBar(xp, xpToNext, level) {
 	const barW = 300, barH = 8;
 	const cx   = canvas.width / 2;

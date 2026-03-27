@@ -83,3 +83,7 @@ Utility / Typing
 10. Scholar — Words longer than 6 letters give double XP. Upgrade: threshold drops to 5, then 4 letters.
 11. Focus — Every 5 consecutive kills without taking damage fires a free bonus bullet at the closest enemy. Upgrade: triggers every 4, then 3 kills.
 12. Slow Aura — All enemies move 10% slower permanently. Upgrade: stacks for 10% more each tier.
+
+display the selected skills in the screen
+
+refactor the power ups, create a new folder named "power_ups" each power up will be it's own file

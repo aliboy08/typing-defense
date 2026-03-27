@@ -7,13 +7,13 @@ import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './entities.js';
 import { MultiGame } from './MultiGame.js';
 import { drawParticles } from './particles.js';
 import { drawLightningArcs } from './lightning.js';
-import { pickRandomSkills } from './skills/index.js';
+import { pickRandomSkills, ALL_SKILLS } from './skills/index.js';
 import {
   drawGrid, drawShield, drawHUD, drawMenu, drawGameOver,
   drawActivePowerUps, drawWaveFlash, drawWaveClearFlash,
   drawBaseAt, drawHpBarAt, drawCentered,
   drawMultiWord, drawPlayerLabels,
-  drawXPBar, drawLevelUpScreen,
+  drawXPBar, drawLevelUpScreen, drawActiveSkills,
 } from './renderer.js';
 
 export class Game {
@@ -420,6 +420,9 @@ export class Game {
       drawHUD(this.solo.score, this.solo.wave);
       drawActivePowerUps(this.solo.activeChainLightning, this.solo.chainLightningTimer, this.solo.activeSlow, this.solo.slowTimer, this.solo.activeFreeze, this.solo.freezeTimer);
       drawXPBar(this.solo.xp, this.solo.xpToNext, this.solo.level);
+      drawActiveSkills(ALL_SKILLS
+        .filter(s => this.solo.skills[s.id])
+        .map(s => ({ name: s.name, icon: s.icon, tier: this.solo.skills[s.id], maxTier: s.maxTier })));
 
       if (this.state === 'levelup') {
         drawLevelUpScreen(this.levelUpChoices, this.solo.skills, this.solo.level + 1);
