@@ -42,18 +42,31 @@ export class SoloWord {
     const sx     = this.x - fullW / 2;
 
     // Background box
-    ctx.fillStyle = 'rgba(5,5,16,0.65)';
+    ctx.fillStyle = isTarget ? 'rgba(40,18,0,0.85)' : 'rgba(5,5,16,0.65)';
     ctx.fillRect(sx - 5, this.y - 13, fullW + 10, 26);
 
     // Border
     if (this.hitFlash > 0) {
+      ctx.shadowBlur  = 0;
       ctx.strokeStyle = `rgba(255,34,68,${this.hitFlash})`;
       ctx.lineWidth   = 2;
       ctx.strokeRect(sx - 5, this.y - 13, fullW + 10, 26);
     } else if (isTarget) {
-      ctx.strokeStyle = COLORS.wordTarget + '88';
-      ctx.lineWidth   = 1;
+      ctx.shadowBlur  = 22;
+      ctx.shadowColor = COLORS.wordTarget;
+      ctx.strokeStyle = COLORS.wordTarget;
+      ctx.lineWidth   = 2;
       ctx.strokeRect(sx - 5, this.y - 13, fullW + 10, 26);
+      // Downward arrow above the HP bar
+      ctx.shadowBlur  = 14;
+      ctx.fillStyle   = COLORS.wordTarget;
+      ctx.beginPath();
+      ctx.moveTo(this.x - 6, this.y - 34);
+      ctx.lineTo(this.x + 6, this.y - 34);
+      ctx.lineTo(this.x,     this.y - 27);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur  = 0;
     }
 
     // Typed prefix

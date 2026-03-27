@@ -55,3 +55,5 @@ sample word = "test"
 when the letters "te" are typed, it will only watch for "s" then "t".
 
 add a "slow" power up, this will slow current enemies in the screen. This will also have a timer, when it runs out, it will resume the original speed of affected enemies.
+
+when the enemy/word is the current target, make the indicator more obvious, sometimes it's hard to see what is the current active target

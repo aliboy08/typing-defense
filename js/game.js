@@ -106,6 +106,7 @@ export class Game {
     } else {
       this.solo.spawnBullet(this.targetWord);
       if (this.currentInput === this.targetWord.text) {
+        this.targetWord.completed = true;
         this.currentInput = '';
         this.targetWord   = null;
       }
@@ -364,7 +365,7 @@ export class Game {
       drawParticles(this.solo.particles);
       drawLightningArcs(this.solo.lightningArcs);
       this._drawSoloProjectiles();
-      for (const w  of this.solo.words)    w.draw(w  === this.targetWord, this.currentInput);
+      for (const w  of this.solo.words)    w.draw(w  === this.targetWord || w.completed, w.completed ? w.text : this.currentInput);
       for (const pu of this.solo.powerUps) pu.draw(pu === this.targetWord, this.currentInput);
       drawHUD(this.solo.score, this.solo.wave);
       drawActivePowerUps(this.solo.activeChainLightning, this.solo.chainLightningTimer, this.solo.activeSlow, this.solo.slowTimer, this.solo.activeFreeze, this.solo.freezeTimer);
