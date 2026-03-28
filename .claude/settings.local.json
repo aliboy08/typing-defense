@@ -6,7 +6,8 @@
       "Bash(wc -l /Users/alistairponce/Documents/Projects/typing-defense/js/*.js)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ls:*)"
     ]
   }
 }

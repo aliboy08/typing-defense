@@ -1,6 +1,7 @@
 import { canvas } from './canvas.js';
 import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, SLOW_MULTIPLIER, FREEZE_DURATION, getWaveConfig, xpForLevel } from './constants.js';
-import { SoloWord, SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './entities.js';
+import { SoloWord } from './entities.js';
+import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './power_ups/index.js';
 import { spawnParticles, updateParticles } from './particles.js';
 import { createLightningPoints, updateLightningArcs } from './lightning.js';
 

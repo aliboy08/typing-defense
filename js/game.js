@@ -3,7 +3,7 @@ import { COLORS, BASE_RADIUS, BASE_RADIUS_V } from './constants.js';
 import { WORD_LIST } from './wordlist.js';
 import { Network } from './network.js';
 import { SoloGame } from './SoloGame.js';
-import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './entities.js';
+import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './power_ups/index.js';
 import { MultiGame } from './MultiGame.js';
 import { drawParticles } from './particles.js';
 import { drawLightningArcs } from './lightning.js';
