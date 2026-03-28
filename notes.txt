@@ -98,3 +98,5 @@ inject those code to the SoloGame.js through hooks.
 refactor power_ups, each power up will be in it's own folder, put the specific power up function/apply logic on the same folder(only if it is unique to that power up).
 
 add support for mobile, it will always show the keyboard input on mobile (only on mobile)
+
+lets debug the targetting system, a bug report details that when there was "tide" and "timber" words, the "tide" was the current target, and the letters "ti" were typed but it wasn't able to proceed with "de" because somehow the word "timber" was being targetted? please double check and fix any targetting confusion to make sure there is only 1 active target.

@@ -100,7 +100,8 @@ export class Game {
 
   // ── Solo targeting ────────────────────────────────────────────────────────────
   _soloHandleKey(key) {
-    const allTargets = [...this.solo.words, ...this.solo.powerUps];
+    // Exclude completed words — they are awaiting bullet arrival and must not be re-targeted
+    const allTargets = [...this.solo.words.filter(w => !w.completed), ...this.solo.powerUps];
 
     if (!this.targetWord || !allTargets.includes(this.targetWord)) {
       // No target — lock onto the closest word whose first letter matches
@@ -112,9 +113,22 @@ export class Game {
       this.targetWord   = best;
       this.currentInput = key;
     } else {
-      // Locked target — only accept the next expected character
-      if (key !== this.targetWord.text[this.currentInput.length]) return;
-      this.currentInput += key;
+      // Locked target — accept the next expected character
+      if (key !== this.targetWord.text[this.currentInput.length]) {
+        // Mismatch: try to find another word whose text starts with the full accumulated prefix + this key.
+        // This lets the player "steer" to an intended word (e.g. "tide") even when the auto-selected
+        // target was a different word sharing a common prefix (e.g. "timber").
+        const newInput = this.currentInput + key;
+        let best = null, bestX = Infinity;
+        for (const w of allTargets) {
+          if (w.text.startsWith(newInput) && w.x < bestX) { bestX = w.x; best = w; }
+        }
+        if (!best) return; // No alternate target — reject the key
+        this.targetWord   = best;
+        this.currentInput = newInput;
+      } else {
+        this.currentInput += key;
+      }
     }
 
     this._handleTargetLetter();
