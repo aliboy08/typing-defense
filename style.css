@@ -279,5 +279,43 @@ body {
   text-align: center;
 }
 
-/* ── Input display (hidden — typing is shown on word highlights instead) ── */
+/* ── Input display (hidden on desktop — shown on mobile) ── */
 #input-display { display: none; }
+
+body.mobile #input-display {
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 20px;
+  background: rgba(5, 5, 20, 0.88);
+  border-top: 1px solid #00ffcc33;
+  color: #00ffcc;
+  font-family: 'Courier New', monospace;
+  font-size: 20px;
+  letter-spacing: 4px;
+  text-align: center;
+  text-shadow: 0 0 10px #00ffcc;
+  min-height: 48px;
+  z-index: 100;
+}
+
+/* ── Mobile hidden input (keeps virtual keyboard open) ── */
+#mobile-input {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  opacity: 0;
+  border: none;
+  outline: none;
+  padding: 0;
+  font-size: 16px; /* prevents iOS auto-zoom on focus */
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  pointer-events: none;
+  z-index: 99;
+}

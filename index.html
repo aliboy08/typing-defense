@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
   <title>Typing Defense</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -21,8 +21,19 @@
 
   </div>
 
-  <!-- Input display (always visible during play) -->
+  <!-- Input display (always visible during play on mobile) -->
   <div id="input-display"></div>
+
+  <!-- Hidden input to keep mobile virtual keyboard open -->
+  <input
+    id="mobile-input"
+    type="text"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="none"
+    spellcheck="false"
+    aria-hidden="true"
+  >
 
   <!-- Debug panel (toggle with backtick) -->
   <div id="debug-panel" class="hidden">

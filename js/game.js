@@ -41,6 +41,9 @@ export class Game {
 
     this.lastTime = 0;
 
+    this._isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (this._isMobile) document.body.classList.add('mobile');
+
     this._bindButtons();
     this._bindInput();
     this._bindDebug();
@@ -55,6 +58,7 @@ export class Game {
     this._showScreen(null);
     this.state = 'playing';
     this.solo.startWave(1);
+    this._updateInputDisplay();
   }
 
   // ── Screen helper ─────────────────────────────────────────────────────────────
@@ -138,7 +142,13 @@ export class Game {
     if (w === this.targetWord || w == null) {
       this.currentInput = '';
       this.targetWord   = null;
+      this._updateInputDisplay();
     }
+  }
+
+  _updateInputDisplay() {
+    const el = document.getElementById('input-display');
+    if (el) el.textContent = this.currentInput;
   }
 
   // ── Network init ─────────────────────────────────────────────────────────────
@@ -204,9 +214,9 @@ export class Game {
       }
       if (this.state === 'lobby' || this.state === 'waiting') return;
 
-      // Level-up skill selection: 1, 2, 3
+      // Level-up skill selection: 1, 2, 3 (desktop only; mobile handled via input event)
       if (this.state === 'levelup') {
-        if (e.key === '1' || e.key === '2' || e.key === '3') {
+        if (!this._isMobile && (e.key === '1' || e.key === '2' || e.key === '3')) {
           const idx   = parseInt(e.key) - 1;
           const skill = this.levelUpChoices[idx];
           if (skill) this._applySkill(skill);
@@ -226,8 +236,13 @@ export class Game {
         this.currentInput = '';
         this.targetWord   = null;
         if (this.gameMode === 'multi') this.network.sendInput('');
+        this._updateInputDisplay();
         return;
       }
+
+      // On mobile, single-char keys are handled by the input event on #mobile-input
+      if (this._isMobile) return;
+
       if (e.key.length !== 1) return;
 
       if (this.gameMode === 'solo') {
@@ -246,6 +261,76 @@ export class Game {
         }
         this.network.sendInput(this.currentInput);
       }
+    });
+
+    if (this._isMobile) this._bindMobileInput();
+  }
+
+  // ── Mobile input ──────────────────────────────────────────────────────────────
+  _bindMobileInput() {
+    const mobileInput = document.getElementById('mobile-input');
+
+    // Re-focus whenever it loses focus during active gameplay
+    mobileInput.addEventListener('blur', () => {
+      if (this.state === 'playing' || this.state === 'levelup') {
+        setTimeout(() => mobileInput.focus(), 50);
+      }
+    });
+
+    // Tap anywhere on the canvas/game area to (re)open the keyboard
+    document.addEventListener('touchstart', (e) => {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+        mobileInput.focus();
+      }
+    }, { passive: true });
+
+    mobileInput.addEventListener('input', (e) => {
+      const char = e.data;
+      mobileInput.value = ''; // always keep the field empty
+
+      // Backspace / delete = clear current target (like Escape)
+      if (!char || e.inputType === 'deleteContentBackward') {
+        if (this.state === 'playing') {
+          this.currentInput = '';
+          this.targetWord   = null;
+          if (this.gameMode === 'multi') this.network.sendInput('');
+          this._updateInputDisplay();
+        }
+        return;
+      }
+
+      // Level-up: accept 1, 2, 3
+      if (this.state === 'levelup') {
+        if (char === '1' || char === '2' || char === '3') {
+          const idx   = parseInt(char) - 1;
+          const skill = this.levelUpChoices[idx];
+          if (skill) this._applySkill(skill);
+        }
+        return;
+      }
+
+      if (this.state !== 'playing') return;
+      if (!/^[a-zA-Z]$/.test(char)) return;
+
+      const key = char.toLowerCase();
+      if (this.gameMode === 'solo') {
+        this._soloHandleKey(key);
+      } else {
+        const serverInput = this.multi.serverState?.players[this.myPlayerNum]?.input ?? this.currentInput;
+        const serverWords = this.multi.serverState?.words ?? [];
+        const myTargetId  = this.multi.serverState?.players[this.myPlayerNum]?.targetId ?? null;
+        const myTarget    = serverWords.find(w => w.id === myTargetId) ?? null;
+
+        if (!myTarget) {
+          this.currentInput += key;
+        } else {
+          if (key !== myTarget.text[serverInput.length]) return;
+          this.currentInput += key;
+        }
+        this.network.sendInput(this.currentInput);
+      }
+
+      this._updateInputDisplay();
     });
   }
 
