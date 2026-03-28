@@ -1,5 +1,4 @@
-import { canvas } from './canvas.js';
-import { COLORS, SHIELD_X, CHAIN_LIGHTNING_DURATION, SLOW_DURATION, SLOW_MULTIPLIER, FREEZE_DURATION, getWaveConfig, xpForLevel } from './constants.js';
+import { COLORS, SHIELD_X, SLOW_MULTIPLIER, getWaveConfig, xpForLevel } from './constants.js';
 import { SoloWord } from './entities.js';
 import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './power_ups/index.js';
 import { spawnParticles, updateParticles } from './particles.js';
@@ -39,24 +38,32 @@ export class SoloGame {
     this.pendingLevelUp = false;
     this.skills         = {};  // { skillId: tier }
 
-    // ── Skill-derived properties (set by skill apply()) ──────────────────────
-    this.maxHp               = 100;
-    this.bulletCount         = 1;
-    this.critChance          = 0;
-    this.piercePower         = 0;
-    this.xpMult              = 1.0;
-    this.scholarThreshold    = 0;   // 0 = disabled
-    this.focusThreshold      = 0;   // 0 = disabled
-    this.consecutiveKills    = 0;
-    this.overkillChains      = 0;
-    this.explosiveRadius     = 0;
-    this.explosiveDamage     = 0;
-    this.slowAuraReduction   = 0;
-    this.regenInterval       = 0;   // 0 = disabled
-    this.regenAmount         = 0;
-    this.regenAccum          = 0;
-    this.lastStandTier       = 0;   // 0 = no skill
-    this.lastStandAvailable  = false;
+    // ── Skill-derived properties ─────────────────────────────────────────────
+    this.maxHp        = 100;
+    this.bulletCount  = 1;
+    this.piercePower  = 0;  // used by spawnBullet and focus hook
+    this.consecutiveKills = 0;
+
+    // ── Hook registry ────────────────────────────────────────────────────────
+    this.hooks = {};
+  }
+
+  // Register a skill hook. Re-registering with the same skillId replaces the handler (for upgrades).
+  registerHook(event, skillId, fn) {
+    if (!this.hooks[event]) this.hooks[event] = new Map();
+    this.hooks[event].set(skillId, fn);
+  }
+
+  // Run all handlers for an event (side-effect hooks).
+  _runHooks(event, ...args) {
+    for (const fn of (this.hooks[event]?.values() ?? [])) fn(this, ...args);
+  }
+
+  // Run all handlers for an event, threading a value through each (reducer hooks).
+  _reduceHooks(event, initial, ...args) {
+    let value = initial;
+    for (const fn of (this.hooks[event]?.values() ?? [])) value = fn(this, value, ...args);
+    return value;
   }
 
   reset() {
@@ -92,23 +99,13 @@ export class SoloGame {
     this.skills         = {};
 
     // Skill properties
-    this.maxHp               = 100;
-    this.bulletCount         = 1;
-    this.critChance          = 0;
-    this.piercePower         = 0;
-    this.xpMult              = 1.0;
-    this.scholarThreshold    = 0;
-    this.focusThreshold      = 0;
-    this.consecutiveKills    = 0;
-    this.overkillChains      = 0;
-    this.explosiveRadius     = 0;
-    this.explosiveDamage     = 0;
-    this.slowAuraReduction   = 0;
-    this.regenInterval       = 0;
-    this.regenAmount         = 0;
-    this.regenAccum          = 0;
-    this.lastStandTier       = 0;
-    this.lastStandAvailable  = false;
+    this.maxHp            = 100;
+    this.bulletCount      = 1;
+    this.piercePower      = 0;
+    this.consecutiveKills = 0;
+
+    // Clear all skill hooks
+    this.hooks = {};
   }
 
   startWave(n) {
@@ -120,18 +117,15 @@ export class SoloGame {
     this.waveClearTimer = 0;
     this.spawnTimer     = 0;
     this.waveStartFlash = 2.0;
-    // Recharge last stand each wave
-    if (this.lastStandTier > 0) this.lastStandAvailable = true;
+    this._runHooks('onWaveStart');
   }
 
   // ── XP helpers ─────────────────────────────────────────────────────────────
 
   _awardXp(word) {
     let xpGain = word.text.length * this.wave;
-    if (this.scholarThreshold > 0 && word.text.length >= this.scholarThreshold) {
-      xpGain *= 2;
-    }
-    xpGain = Math.floor(xpGain * this.xpMult);
+    xpGain = this._reduceHooks('onXpCalc', xpGain, word);
+    xpGain = Math.floor(xpGain);
     this.xp += xpGain;
     if (this.xp >= this.xpToNext && !this.pendingLevelUp) {
       this.pendingLevelUp = true;
@@ -184,43 +178,13 @@ export class SoloGame {
     this.score += word.text.length * this.wave * 10;
     this.waveDestroyed++;
     this._awardXp(word);
-
-    // Focus: consecutive kill streak fires a free bonus bullet
     this.consecutiveKills++;
-    if (this.focusThreshold > 0 && this.consecutiveKills % this.focusThreshold === 0) {
-      const closest = this._nearestWord(SHIELD_X, canvas.height / 2, null);
-      if (closest) {
-        this.projectiles.push({ x: SHIELD_X, y: canvas.height / 2, target: closest, speed: 700, pierceLeft: this.piercePower });
-      }
-    }
-
-    // Overkill: spread excess damage to nearby enemies (no recursion)
-    if (this.overkillChains > 0 && excess > 0) {
-      const targets = [...this.words]
-        .sort((a, b) => Math.hypot(a.x - word.x, a.y - word.y) - Math.hypot(b.x - word.x, b.y - word.y))
-        .slice(0, this.overkillChains);
-      for (const t of targets) {
-        t.hp = Math.max(0, t.hp - excess);
-        t.hitFlash = 0.5;
-        if (t.hp <= 0) {
-          spawnParticles(this.particles, t.x, t.y, COLORS.particle[Math.floor(Math.random() * COLORS.particle.length)]);
-          this.words     = this.words.filter(w => w !== t);
-          this.score    += t.text.length * this.wave * 10;
-          this.waveDestroyed++;
-          this._awardXp(t);
-          onClearInput(t);
-        }
-      }
-    }
-
+    this._runHooks('onWordDestroyed', word, excess, onClearInput);
     onClearInput(word);
   }
 
   damageEnemy(word, dmg, onClearInput, fromChain = false, fromOverkill = false) {
-    // Critical strike: only on primary bullet hits, not chain or overkill
-    if (!fromChain && !fromOverkill && this.critChance > 0 && Math.random() < this.critChance) {
-      dmg = word.hp; // instant kill
-    }
+    dmg = this._reduceHooks('onDamageCalc', dmg, word, fromChain, fromOverkill);
 
     const hpBefore = word.hp;
     word.hp        = Math.max(0, word.hp - dmg);
@@ -260,13 +224,9 @@ export class SoloGame {
 
   updateProjectiles(dt, onClearInput) {
     this.projectiles = this.projectiles.filter(p => {
-      // If target was destroyed, try to pierce to a new one
+      // If target was destroyed, try to redirect (e.g. piercing shot)
       if (!this.words.includes(p.target)) {
-        if (p.pierceLeft > 0 && this.words.length > 0) {
-          const next = this._nearestWord(p.x, p.y, null);
-          if (next) { p.target = next; p.pierceLeft--; return true; }
-        }
-        return false;
+        return this._reduceHooks('onBulletRedirect', false, p, null);
       }
 
       const dx   = p.target.x - p.x;
@@ -275,23 +235,8 @@ export class SoloGame {
 
       if (dist < 6) {
         this.damageEnemy(p.target, 1, onClearInput);
-
-        // Explosive round: splash nearby enemies
-        if (this.explosiveDamage > 0) {
-          const hitX = p.target.x, hitY = p.target.y;
-          for (const w of [...this.words]) {
-            if (w !== p.target && Math.hypot(w.x - hitX, w.y - hitY) <= this.explosiveRadius) {
-              this.damageEnemy(w, this.explosiveDamage, onClearInput, false, true);
-            }
-          }
-        }
-
-        // Pierce: redirect bullet to next nearest enemy
-        if (p.pierceLeft > 0 && this.words.length > 0) {
-          const next = this._nearestWord(p.x, p.y, p.target);
-          if (next) { p.target = next; p.pierceLeft--; return true; }
-        }
-        return false;
+        this._runHooks('onBulletHit', p, onClearInput);
+        return this._reduceHooks('onBulletRedirect', false, p, p.target);
       }
 
       const move = Math.min(p.speed * dt, dist);
@@ -303,53 +248,8 @@ export class SoloGame {
 
   // ── Power-ups ──────────────────────────────────────────────────────────────
 
-  activateChainLightning(pu, onClearInput) {
-    if (pu) {
-      this.powerUps = this.powerUps.filter(p => p !== pu);
-      spawnParticles(this.particles, pu.x, pu.y, '#ffdd00');
-    }
-    const startX   = pu ? pu.x : SHIELD_X;
-    const startY   = pu ? pu.y : canvas.height / 2;
-    const maxChain = 4;
-    const hit      = new Set();
-    let chainX = startX, chainY = startY;
-
-    for (let i = 0; i < maxChain; i++) {
-      let nearest = null, nearestDist = Infinity;
-      for (const w of this.words) {
-        if (hit.has(w)) continue;
-        const d = Math.hypot(w.x - chainX, w.y - chainY);
-        if (d < nearestDist) { nearestDist = d; nearest = w; }
-      }
-      if (!nearest) break;
-      this.lightningArcs.push(createLightningPoints(chainX, chainY, nearest.x, nearest.y));
-      spawnParticles(this.particles, nearest.x, nearest.y, '#aaff00');
-      this.damageEnemy(nearest, Math.ceil(nearest.maxHp * 0.75), onClearInput, true);
-      hit.add(nearest);
-      chainX = nearest.x;
-      chainY = nearest.y;
-    }
-    this.activeChainLightning = true;
-    this.chainLightningTimer  = CHAIN_LIGHTNING_DURATION;
-  }
-
-  activateSlow(pu, onClearInput) {
-    if (pu) {
-      this.powerUps = this.powerUps.filter(p => p !== pu);
-      spawnParticles(this.particles, pu.x, pu.y, '#44ccff');
-    }
-    this.activeSlow = true;
-    this.slowTimer  = SLOW_DURATION;
-  }
-
-  activateFreeze(pu, onClearInput) {
-    if (pu) {
-      this.powerUps = this.powerUps.filter(p => p !== pu);
-      spawnParticles(this.particles, pu.x, pu.y, '#b4f0ff');
-    }
-    for (const w of this.words) w.frozen = true;
-    this.activeFreeze = true;
-    this.freezeTimer  = FREEZE_DURATION;
+  activatePowerUp(pu, onClearInput) {
+    pu.activate(this, onClearInput);
   }
 
   // ── Main update ────────────────────────────────────────────────────────────
@@ -374,19 +274,13 @@ export class SoloGame {
       if (this.waveClearTimer <= 0) this.startWave(this.wave + 1);
     }
 
-    // Speed multiplier: slow aura stacks multiplicatively with power-up slow
+    // Speed multiplier: slow aura hook stacks multiplicatively with power-up slow
     const baseMult  = debugSlowEnemies ? 0.1 : (this.activeSlow ? SLOW_MULTIPLIER : 1);
-    const speedMult = baseMult * (1 - this.slowAuraReduction);
+    const speedMult = this._reduceHooks('onSpeedMult', baseMult);
     for (const w of this.words) w.update(dt, speedMult);
 
-    // Shield regen
-    if (this.regenInterval > 0) {
-      this.regenAccum += dt;
-      if (this.regenAccum >= this.regenInterval) {
-        this.regenAccum -= this.regenInterval;
-        this.hp = Math.min(this.maxHp, this.hp + this.regenAmount);
-      }
-    }
+    // Per-frame skill hooks (e.g. shield regen)
+    this._runHooks('onUpdate', dt);
 
     // Power-up spawn + update
     this.powerUpTimer += dt;
@@ -437,13 +331,7 @@ export class SoloGame {
     const hit = this.words.filter(w => w.reached);
     for (const w of hit) {
       let newHp = this.hp - Math.ceil(w.text.length * 1.5);
-
-      // Last stand: intercept lethal hit
-      if (newHp <= 0 && !debugGodMode && this.lastStandTier > 0 && this.lastStandAvailable) {
-        newHp = this.lastStandTier;
-        this.lastStandAvailable = false;
-        spawnParticles(this.particles, SHIELD_X, w.y, '#ffffff');
-      }
+      newHp = this._reduceHooks('onLethalHit', newHp, w, debugGodMode);
 
       const minHp = debugGodMode ? 1 : 0;
       this.hp = Math.max(minHp, newHp);

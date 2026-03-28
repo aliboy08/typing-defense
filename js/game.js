@@ -3,7 +3,7 @@ import { COLORS, BASE_RADIUS, BASE_RADIUS_V } from './constants.js';
 import { WORD_LIST } from './wordlist.js';
 import { Network } from './network.js';
 import { SoloGame } from './SoloGame.js';
-import { SoloPowerUp, SoloSlowPowerUp, SoloFreezePowerUp } from './power_ups/index.js';
+import { BasePowerUp } from './power_ups/BasePowerUp.js';
 import { MultiGame } from './MultiGame.js';
 import { drawParticles } from './particles.js';
 import { drawLightningArcs } from './lightning.js';
@@ -117,26 +117,12 @@ export class Game {
   }
 
   _handleTargetLetter() {
-    if (this.targetWord instanceof SoloPowerUp) {
+    if (this.targetWord instanceof BasePowerUp) {
       if (this.currentInput === this.targetWord.text) {
         const pu = this.targetWord;
         this.currentInput = '';
         this.targetWord   = null;
-        this.solo.activateChainLightning(pu, w => this._onWordCleared(w));
-      }
-    } else if (this.targetWord instanceof SoloSlowPowerUp) {
-      if (this.currentInput === this.targetWord.text) {
-        const pu = this.targetWord;
-        this.currentInput = '';
-        this.targetWord   = null;
-        this.solo.activateSlow(pu, w => this._onWordCleared(w));
-      }
-    } else if (this.targetWord instanceof SoloFreezePowerUp) {
-      if (this.currentInput === this.targetWord.text) {
-        const pu = this.targetWord;
-        this.currentInput = '';
-        this.targetWord   = null;
-        this.solo.activateFreeze(pu, w => this._onWordCleared(w));
+        this.solo.activatePowerUp(pu, w => this._onWordCleared(w));
       }
     } else {
       this.solo.spawnBullet(this.targetWord);

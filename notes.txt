@@ -87,3 +87,13 @@ Utility / Typing
 display the selected skills in the screen
 
 refactor the power ups, create a new folder named "power_ups" each power up will be it's own file
+
+also add current active target indicator on the power ups
+
+extract reusable codes shared in the power ups, so we don't similar codes
+
+refactor the skills, each skill will be in it's own folder, put the specific skill function/apply logic on the same folder as the skill (only if it is unique to that skill)
+inject those code to the SoloGame.js through hooks.
+
+refactor power_ups, each power up will be in it's own folder, put the specific power up function/apply logic on the same folder(only if it is unique to that power up).
+

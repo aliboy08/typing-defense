@@ -9,6 +9,10 @@ export default {
     '35% chance to instantly destroy an enemy.',
   ][tier - 1],
   apply(solo, tier) {
-    solo.critChance = [0.15, 0.25, 0.35][tier - 1];
+    const critChance = [0.15, 0.25, 0.35][tier - 1];
+    solo.registerHook('onDamageCalc', 'critical-strike', (solo, dmg, word, fromChain, fromOverkill) => {
+      if (!fromChain && !fromOverkill && Math.random() < critChance) return word.hp;
+      return dmg;
+    });
   },
 };

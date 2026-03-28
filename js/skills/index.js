@@ -1,15 +1,15 @@
-import doubleShot     from './doubleShot.js';
-import explosiveRound from './explosiveRound.js';
-import criticalStrike from './criticalStrike.js';
-import overkill       from './overkill.js';
-import piercingShot   from './piercingShot.js';
-import fortify        from './fortify.js';
-import shieldRegen    from './shieldRegen.js';
-import lastStand      from './lastStand.js';
-import greed          from './greed.js';
-import scholar        from './scholar.js';
-import focus          from './focus.js';
-import slowAura       from './slowAura.js';
+import doubleShot     from './doubleShot/index.js';
+import explosiveRound from './explosiveRound/index.js';
+import criticalStrike from './criticalStrike/index.js';
+import overkill       from './overkill/index.js';
+import piercingShot   from './piercingShot/index.js';
+import fortify        from './fortify/index.js';
+import shieldRegen    from './shieldRegen/index.js';
+import lastStand      from './lastStand/index.js';
+import greed          from './greed/index.js';
+import scholar        from './scholar/index.js';
+import focus          from './focus/index.js';
+import slowAura       from './slowAura/index.js';
 
 export const ALL_SKILLS = [
   doubleShot, explosiveRound, criticalStrike, overkill, piercingShot,

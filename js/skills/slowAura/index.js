@@ -5,6 +5,9 @@ export default {
   maxTier: 3,
   description: (tier) => `Enemies permanently move ${tier * 10}% slower.`,
   apply(solo, tier) {
-    solo.slowAuraReduction = tier * 0.1; // 0.1, 0.2, 0.3
+    const reduction = tier * 0.1;
+    solo.registerHook('onSpeedMult', 'slow-aura', (solo, speedMult) => {
+      return speedMult * (1 - reduction);
+    });
   },
 };
