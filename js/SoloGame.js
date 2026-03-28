@@ -163,7 +163,16 @@ export class SoloGame {
     let   pool = this.getWordPool(wordList);
     if (!pool.length) { this.usedWords.clear(); pool = this.getWordPool(wordList); }
     if (!pool.length) return;
-    const text = pool[Math.floor(Math.random() * pool.length)];
+
+    // On higher waves, occasionally mix in a short word (3-5 letters) for variety.
+    // Probability caps at 12% so short words stay rare on hard stages.
+    let text;
+    if (this.wave >= 6 && Math.random() < Math.min(0.12, this.wave * 0.008)) {
+      const shortPool = wordList.filter(w => w.length >= 3 && w.length <= 5 && !this.usedWords.has(w));
+      if (shortPool.length) text = shortPool[Math.floor(Math.random() * shortPool.length)];
+    }
+    if (!text) text = pool[Math.floor(Math.random() * pool.length)];
+
     this.usedWords.add(text);
     this.words.push(new SoloWord(text, cfg.wordSpeed, text.length));
     this.waveSpawned++;

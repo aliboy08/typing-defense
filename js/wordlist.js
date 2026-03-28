@@ -224,6 +224,15 @@ export const WORD_LIST = [
   'vector', 'vortex', 'vulcan', 'warden', 'weapon', 'wiring', 'wizard', 'wraith',
   'zapper', 'zealot', 'zenith',
 
+  // 7 letters
+  'arsenal', 'barrage', 'torpedo', 'warpath', 'abysmal', 'brigade', 'cloaked',
+  'condemn', 'contact', 'control', 'courier', 'defiant', 'descent', 'devoted',
+  'distort', 'divided', 'enforce', 'evasive', 'exhaust', 'exposed', 'faction',
+  'failure', 'fanatic', 'fortify', 'frontal', 'hunting', 'implant', 'inferno',
+  'outcome', 'outpost', 'platoon', 'protect', 'prowler', 'pursuit', 'raiding',
+  'rampant', 'rampage', 'revival', 'rollout', 'spartan', 'thunder', 'traitor',
+  'veteran', 'wrangle',
+
   // 7-9 letters (for harder waves)
   'abscond', 'abscess', 'absolve', 'account', 'achieve', 'acquire', 'address',
   'advance', 'altered', 'android', 'annihil', 'anomaly', 'assault', 'astroid',
@@ -246,6 +255,38 @@ export const WORD_LIST = [
   'tactical', 'tempest', 'terminal', 'tethered', 'thermal', 'titanium', 'toxin',
   'tracker', 'trinity', 'turmoil', 'twisted', 'unknown', 'uprising', 'verdict',
   'voltage', 'warrior', 'wasteland', 'warhead', 'watcher', 'warzone',
+
+  // 8 letters
+  'blackout', 'commando', 'conquest', 'critical', 'crossbow', 'deadzone',
+  'detonate', 'dropzone', 'dystopia', 'fallback', 'feedback', 'freefall',
+  'gauntlet', 'gridlock', 'gunpoint', 'hardened', 'headshot', 'hellfire',
+  'ignition', 'incoming', 'infernal', 'ironclad', 'launcher', 'meltdown',
+  'militant', 'outburst', 'outflank', 'overload', 'perilous', 'platform',
+  'priority', 'pursuing', 'radiance', 'reckless', 'remnants', 'sabotage',
+  'scramble', 'sentinel', 'shrapnel', 'skirmish', 'standoff', 'submerge',
+  'suppress', 'surgical', 'throttle', 'tracking', 'volatile', 'warfront',
+  'whiplash', 'wildfire', 'withdraw', 'wolfpack',
+
+  // 9-12 letters (end-game extended)
+  'aftershock', 'aggression', 'apocalypse', 'armageddon', 'bombardment',
+  'camouflage', 'catastrophe', 'combustion', 'conspiracy', 'decimation',
+  'demolition', 'detonation', 'devastation', 'earthquake', 'escalation',
+  'extinction', 'fortified', 'guerrilla', 'headhunter', 'hurricane',
+  'implosion', 'incendiary', 'infiltrate', 'insurgency', 'irradiate',
+  'juggernaut', 'lethality', 'malfunction', 'overthrown', 'predatory',
+  'retaliate', 'shattered', 'shieldwall', 'stormfront', 'subjugate',
+  'supernova', 'supersonic', 'thunderbolt', 'trailblazer', 'termination',
+  'underworld', 'unleashing', 'voidwalker', 'warmonger', 'wavelength',
+  'whirlwind', 'berserker', 'cataclysm', 'chainreact', 'cryogenic',
+  'darkmaster', 'deathstrike', 'dreadnaught', 'deathmarch', 'firestarter',
+  'floodgate', 'forbidden', 'frostbite', 'gladiator', 'grenadier',
+  'hammerfall', 'immolation', 'intercept', 'ironforge', 'labyrinth',
+  'lightning', 'machinegun', 'maelstrom', 'manifested', 'meltingpoint',
+  'obliterate', 'pathogenic', 'powersurge', 'ramification', 'rebellion',
+  'replication', 'shockblast', 'shadowstep', 'slaughter', 'smoldering',
+  'stormwall', 'supersede', 'tachyonic', 'thermonuke', 'titanslayer',
+  'transmute', 'trembling', 'undertow', 'unstoppable', 'vaporize',
+  'venomstrike', 'vibrations', 'warpfield', 'xenoform', 'zerohour',
 
   // 8-10 letters (end-game)
   'absolute', 'activate', 'adaptive', 'afterburn', 'allocate', 'ambiance',
@@ -284,6 +325,48 @@ export const WORD_LIST = [
   'traverse', 'trespass', 'turbojet', 'tyrannic', 'ultrawave', 'undertow',
   'unstable', 'vaccinate', 'vandalism', 'velocity', 'vigilant', 'wipeout',
   'warcraft', 'wasteland', 'wormhole', 'xenolith',
+
+  // ── Game titles ──────────────────────────────────────────────────────────────
+  // 3-4 letters
+  'halo', 'doom', 'pong', 'prey',
+  // 5 letters
+  'quake', 'metro', 'fable',
+  // 6-7 letters
+  'hitman', 'portal', 'hollow', 'skyrim', 'sekiro', 'diablo',
+  'celeste', 'metroid', 'stalker', 'fallout',
+  // 7 letters
+  'witcher', 'remnant', 'destiny', 'terraria', 'warframe', 'bioshock',
+  'returnal', 'fortnite', 'valorant',
+  // 8-10 letters
+  'deathloop', 'minecraft', 'overwatch', 'undertale', 'titanfall',
+  'bloodborne', 'cyberpunk', 'starcraft', 'borderlands',
+
+  // ── Band names ───────────────────────────────────────────────────────────────
+  // 3-4 letters
+  'muse', 'tool', 'rush', 'korn', 'blur', 'kiss', 'hole', 'devo', 'ween',
+  // 5 letters
+  'queen', 'cream', 'clash', 'tesla', 'primus', 'pixies',
+  // 6 letters
+  'exodus', 'slayer', 'priest', 'maiden', 'thrice', 'saosin', 'coheed',
+  'atreyu', 'fugazi', 'rancid', 'morbid',
+  // 7 letters
+  'nirvana', 'pantera', 'sabbath', 'prodigy', 'anthrax', 'kreator',
+  'incubus', 'emperor', 'chevelle',
+  // 8-10 letters
+  'mastodon', 'slipknot', 'megadeth', 'obituary', 'deftones', 'paramore',
+  'enslaved', 'agalloch', 'converge', 'neurosis', 'evanescence',
+  'satyricon', 'audioslave', 'dragonforce', 'soundgarden', 'behemoth',
+  'metallica', 'radiohead', 'nightwish', 'powerwolf', 'deafheaven',
+
+  // ── Song titles ──────────────────────────────────────────────────────────────
+  // 4-5 letters
+  'numb', 'creep', 'roxanne',
+  // 6-7 letters
+  'psycho', 'hysteria', 'starlight', 'paranoid', 'thriller', 'imagine',
+  'respect', 'hallelujah', 'stronger', 'natural', 'believer', 'demons',
+  'madness', 'pressure', 'sunburn', 'survival', 'reapers', 'defector',
+  'algorithm', 'blockout', 'supremacy', 'aftermath', 'stockholm',
+  'radioactive', 'invincible', 'resistance', 'chandelier',
 ];
 
 if (typeof module !== 'undefined' && module.exports) module.exports = WORD_LIST;
